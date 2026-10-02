@@ -91,6 +91,19 @@
         <button id="openShortcuts" class="secondary" type="button">Open shortcut settings</button>
       </section>
 
+      <section>
+        <label><strong>Backup &amp; Restore</strong></label>
+        <p class="hint">
+          Export your settings to a JSON file, or import them from a previously exported file. This includes global CSS,
+          whitelist, priority, and all domain-specific CSS.
+        </p>
+        <div class="io-actions">
+          <button id="exportBtn" type="button" class="secondary">Export settings…</button>
+          <button id="importBtn" type="button" class="secondary">Import settings…</button>
+          <input type="file" id="importFile" accept=".json,application/json" hidden />
+        </div>
+      </section>
+
       <div class="actions">
         <button id="saveBtn">Save all</button>
         <button id="resetBtn" class="secondary">Reset to default</button>

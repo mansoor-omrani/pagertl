@@ -284,3 +284,14 @@ button.secondary:hover {
   color: #777;
   line-height: 1.3;
 }
+
+/* Import / Export */
+.io-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.io-actions button {
+  flex: 0 0 auto;
+}

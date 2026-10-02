@@ -163,6 +163,8 @@
   <body>
     <h1>PageRTL</h1>
     <p class="subtitle" id="siteName">…</p>
+
+    <!-- Main toggle -->
     <div class="toggle-row">
       <span class="toggle-label">RTL for this page</span>
       <label class="switch">
@@ -170,6 +172,8 @@
         <span class="slider"></span>
       </label>
     </div>
+
+    <!-- Whitelist row -->
     <div class="whitelist-row" id="whitelistRow">
       <div>
         <span class="label">Whitelist:</span>
@@ -177,14 +181,26 @@
       </div>
       <button class="btn-mini" id="whitelistBtn">…</button>
     </div>
+
+    <!-- Custom CSS row -->
+    <div class="whitelist-row" id="domainCssRow">
+      <div>
+        <span class="label">Custom CSS:</span>
+        <span class="value" id="domainCssValue">checking…</span>
+      </div>
+      <button class="btn-mini" id="domainCssBtn">…</button>
+    </div>
+
     <div class="status" id="status"></div>
     <div class="warn" id="warn"></div>
+
     <div class="footer">
       <a href="#" id="openOptions">Settings</a>
-      <span class="reset-link" id="resetManual" title="Forget the manual on/off decision for this tab"
-        >Reset override</span
-      >
+      <span class="reset-link" id="resetManual" title="Forget the manual on/off decision for this tab">
+        Reset override
+      </span>
     </div>
+
     <script src="popup.js"></script>
   </body>
 </html>

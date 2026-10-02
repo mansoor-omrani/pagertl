@@ -315,3 +315,117 @@ function showStatus(msg, isError = false) {
 function escapeHtml(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+
+// ============================================================
+// Import / Export
+// ============================================================
+
+const exportBtn = document.getElementById("exportBtn");
+const importBtn = document.getElementById("importBtn");
+const importFileEl = document.getElementById("importFile");
+
+/**
+ * Export the current settings as a JSON file.
+ */
+exportBtn.addEventListener("click", () => {
+  // Capture any pending edit in the domain editor before exporting
+  if (editingDomain) {
+    domainCssMap[editingDomain] = domainCssTextarea.value;
+  }
+
+  const payload = {
+    _meta: {
+      app: "PageRTL",
+      version: "1.2.0",
+      exportedAt: new Date().toISOString(),
+    },
+    customCss: textarea.value,
+    whitelist: whitelistEl.value,
+    priority: priorityEl.value,
+    domainCss: domainCssMap,
+  };
+
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  a.href = url;
+  a.download = `pagerrtl-settings-${ts}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showStatus("Exported ✓");
+});
+
+/**
+ * Import settings from a JSON file.
+ */
+importBtn.addEventListener("click", () => {
+  importFileEl.value = ""; // reset so re-selecting the same file works
+  importFileEl.click();
+});
+
+importFileEl.addEventListener("change", (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try {
+      data = JSON.parse(reader.result);
+    } catch (err) {
+      showStatus("Import failed: invalid JSON.", true);
+      return;
+    }
+
+    if (!data || typeof data !== "object") {
+      showStatus("Import failed: not a valid object.", true);
+      return;
+    }
+
+    // Validate / sanitize fields
+    const newCss = typeof data.customCss === "string" ? data.customCss : DEFAULT_CSS;
+    const newWhitelist = typeof data.whitelist === "string" ? data.whitelist : "";
+    const newPriority = ["manual-wins", "whitelist-wins", "manual-only"].includes(data.priority)
+      ? data.priority
+      : DEFAULT_PRIORITY;
+
+    let newDomainCss = {};
+    if (data.domainCss && typeof data.domainCss === "object") {
+      for (const [k, v] of Object.entries(data.domainCss)) {
+        if (typeof k === "string" && typeof v === "string") {
+          newDomainCss[k.toLowerCase().trim()] = v;
+        }
+      }
+    }
+
+    // Apply to UI
+    textarea.value = newCss;
+    whitelistEl.value = newWhitelist;
+    priorityEl.value = newPriority;
+    domainCssMap = newDomainCss;
+    closeEditor();
+    renderDomainList();
+    renderPresets();
+
+    // Persist to storage
+    chrome.storage.sync.set(
+      {
+        customCss: newCss,
+        whitelist: newWhitelist,
+        priority: newPriority,
+        domainCss: newDomainCss,
+      },
+      () => showStatus("Imported ✓"),
+    );
+  };
+  reader.onerror = () => {
+    showStatus("Import failed: could not read file.", true);
+  };
+  reader.readAsText(file);
+});
