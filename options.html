@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PageRTL — Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>PageRTL Settings</h1>
+      <section>
+        <label for="customCss"><strong>Custom CSS</strong></label>
+        <p class="hint">
+          Injected only when RTL is enabled on a page. Useful for keeping <code>&lt;pre&gt;</code> blocks LTR.
+        </p>
+        <textarea id="customCss" rows="8" spellcheck="false"></textarea>
+      </section>
+      <section>
+        <label for="whitelist"><strong>Whitelist (auto-enable domains)</strong></label>
+        <p class="hint">
+          When you visit one of these domains, RTL is applied automatically (depending on the priority below). One
+          domain per line. Lines starting with <code>#</code> are ignored.
+        </p>
+        <textarea
+          id="whitelist"
+          rows="6"
+          spellcheck="false"
+          placeholder="example.com&#10;fa.wikipedia.org&#10;# comment"
+        ></textarea>
+      </section>
+      <section>
+        <label for="priority"><strong>Priority: manual vs. whitelist</strong></label>
+        <p class="hint">Decides what happens when the whitelist and your manual on/off decision disagree.</p>
+        <select id="priority">
+          <option value="manual-wins">Manual decision wins (default)</option>
+          <option value="whitelist-wins">Whitelist wins (always auto-enable)</option>
+          <option value="manual-only">Manual only (ignore whitelist)</option>
+        </select>
+      </section>
+      <section>
+        <label><strong>Keyboard shortcut</strong></label>
+        <p class="hint">Default: <code>Alt+Shift+R</code>. To change it, open your browser's shortcut settings:</p>
+        <button id="openShortcuts" class="secondary" type="button">Open shortcut settings</button>
+      </section>
+      <div class="actions">
+        <button id="saveBtn">Save</button>
+        <button id="resetBtn" class="secondary">Reset to default</button>
+        <span id="status" class="status"></span>
+      </div>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>
