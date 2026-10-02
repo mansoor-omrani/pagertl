@@ -1,6 +1,7 @@
 // background.js
 
-const DEFAULT_CSS = "pre { direction: ltr; }";
+const DEFAULT_CSS = `html { direction: rtl; }
+pre { direction: ltr; }`;
 const DEFAULT_PRIORITY = "manual-wins"; // "manual-wins" | "whitelist-wins" | "manual-only"
 const TAB_STATE_KEY = "pagerrtl_tab_states";
 
@@ -194,7 +195,6 @@ async function applyToTab(tabId, state) {
 
     updateBadge(tabId, state);
   } catch (err) {
-    // Restricted page (chrome://, PDF viewer, etc.)
     console.warn("PageRTL: could not apply to tab", tabId, err);
   }
 }

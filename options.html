@@ -9,15 +9,33 @@
     <div class="container">
       <h1>PageRTL Settings</h1>
 
+      <!-- ===================== Global CSS ===================== -->
       <section>
-        <label for="customCss"><strong>Global Custom CSS</strong></label>
+        <div class="label-row">
+          <label for="customCss"><strong>Global Custom CSS</strong></label>
+          <button id="restoreGlobalCssBtn" type="button" class="link-mini">Restore default</button>
+        </div>
         <p class="hint">
-          Injected only when RTL is enabled. Applied to every page. Useful for keeping <code>&lt;pre&gt;</code> blocks
-          LTR.
+          Injected on every page (only when RTL is enabled). By default it contains
+          <code>html { direction: rtl; }</code> to make the page right-to-left, and
+          <code>pre { direction: ltr; }</code> to keep code blocks left-to-right. <br /><br />
+          If a website already sets <code>dir</code> on <code>&lt;html&gt;</code>
+          and you want to override it, use
+          <code>html { direction: rtl !important; }</code>.
         </p>
-        <textarea id="customCss" rows="6" spellcheck="false"></textarea>
+        <textarea id="customCss" rows="8" spellcheck="false"></textarea>
+
+        <!-- Live preview for global CSS -->
+        <div class="preview-wrap">
+          <div class="preview-header">
+            <span>Live preview (global CSS)</span>
+            <button id="toggleGlobalPreview" type="button" class="link-mini">Hide</button>
+          </div>
+          <iframe id="globalPreview" class="preview-frame" sandbox="" title="Global CSS preview"></iframe>
+        </div>
       </section>
 
+      <!-- ===================== Presets ===================== -->
       <section>
         <label><strong>Recommended CSS presets</strong></label>
         <p class="hint">
@@ -33,6 +51,7 @@
         <div id="presetList" class="preset-list"></div>
       </section>
 
+      <!-- ===================== Whitelist ===================== -->
       <section>
         <label for="whitelist"><strong>Whitelist (auto-enable domains)</strong></label>
         <p class="hint">
@@ -47,6 +66,7 @@
         ></textarea>
       </section>
 
+      <!-- ===================== Priority ===================== -->
       <section>
         <label for="priority"><strong>Priority: manual vs. whitelist</strong></label>
         <p class="hint">Decides what happens when the whitelist and your manual on/off decision disagree.</p>
@@ -57,6 +77,7 @@
         </select>
       </section>
 
+      <!-- ===================== Domain-specific CSS ===================== -->
       <section>
         <label><strong>Domain-specific CSS</strong></label>
         <p class="hint">
@@ -82,15 +103,19 @@
             spellcheck="false"
             placeholder="pre, code { direction: ltr; text-align: left; }"
           ></textarea>
+
+          <!-- Live preview for domain-specific CSS -->
+          <div class="preview-wrap">
+            <div class="preview-header">
+              <span>Live preview (global + this domain)</span>
+              <button id="toggleDomainPreview" type="button" class="link-mini">Hide</button>
+            </div>
+            <iframe id="domainPreview" class="preview-frame" sandbox="" title="Domain CSS preview"></iframe>
+          </div>
         </div>
       </section>
 
-      <section>
-        <label><strong>Keyboard shortcut</strong></label>
-        <p class="hint">Default: <code>Alt+Shift+R</code>. To change it, open your browser's shortcut settings:</p>
-        <button id="openShortcuts" class="secondary" type="button">Open shortcut settings</button>
-      </section>
-
+      <!-- ===================== Import / Export ===================== -->
       <section>
         <label><strong>Backup &amp; Restore</strong></label>
         <p class="hint">
@@ -102,6 +127,13 @@
           <button id="importBtn" type="button" class="secondary">Import settings…</button>
           <input type="file" id="importFile" accept=".json,application/json" hidden />
         </div>
+      </section>
+
+      <!-- ===================== Shortcuts ===================== -->
+      <section>
+        <label><strong>Keyboard shortcut</strong></label>
+        <p class="hint">Default: <code>Alt+Shift+R</code>. To change it, open your browser's shortcut settings:</p>
+        <button id="openShortcuts" class="secondary" type="button">Open shortcut settings</button>
       </section>
 
       <div class="actions">

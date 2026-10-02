@@ -1,17 +1,20 @@
 // options.js
 
-const DEFAULT_CSS = "pre { direction: ltr; }";
+const DEFAULT_CSS = `html { direction: rtl; }
+pre { direction: ltr; }`;
+
 const DEFAULT_PRIORITY = "manual-wins";
 
 // ============================================================
-// Presets: predefined CSS for popular domains
+// Presets
 // ============================================================
 
 const DOMAIN_PRESETS = {
   "chat.deepseek.com": {
     label: "Deepseek",
     description: "Code blocks and diffs stay LTR",
-    css: `#root > div > div > div:nth-child(1) {
+    css: `html { direction: rtl !important; }
+#root > div > div > div:nth-child(1) {
   position: absolute !important;
   right: unset !important;
 }
@@ -33,6 +36,7 @@ const saveBtn = document.getElementById("saveBtn");
 const resetBtn = document.getElementById("resetBtn");
 const statusEl = document.getElementById("status");
 const openShortcutsEl = document.getElementById("openShortcuts");
+const restoreGlobalCssBtn = document.getElementById("restoreGlobalCssBtn");
 
 const presetListEl = document.getElementById("presetList");
 const loadAllPresetsBtn = document.getElementById("loadAllPresetsBtn");
@@ -45,6 +49,19 @@ const domainEditorEl = document.getElementById("domainEditor");
 const editingDomainNameEl = document.getElementById("editingDomainName");
 const domainCssTextarea = document.getElementById("domainCssTextarea");
 const deleteDomainBtn = document.getElementById("deleteDomainBtn");
+
+// Preview
+const globalPreviewEl = document.getElementById("globalPreview");
+const toggleGlobalPreviewBtn = document.getElementById("toggleGlobalPreview");
+const domainPreviewEl = document.getElementById("domainPreview");
+const toggleDomainPreviewBtn = document.getElementById("toggleDomainPreview");
+const domainPreviewWrapEl = domainPreviewEl.closest(".preview-wrap");
+const globalPreviewWrapEl = globalPreviewEl.closest(".preview-wrap");
+
+// Import/Export
+const exportBtn = document.getElementById("exportBtn");
+const importBtn = document.getElementById("importBtn");
+const importFileEl = document.getElementById("importFile");
 
 // ============================================================
 // State
@@ -71,8 +88,108 @@ chrome.storage.sync.get(
     domainCssMap = { ...settings.domainCss };
     renderDomainList();
     renderPresets();
+    updateGlobalPreview();
   },
 );
+
+// ============================================================
+// Live Preview
+// ============================================================
+
+const PREVIEW_HTML = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 13px;
+    margin: 10px;
+    color: #222;
+    line-height: 1.6;
+  }
+  h3 { margin: 0 0 6px; font-size: 13px; }
+  p { margin: 4px 0; }
+  pre {
+    background: #f4f6f8;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin: 6px 0;
+    overflow-x: auto;
+  }
+  code { font-family: Consolas, Menlo, monospace; }
+  .en { color: #1565C0; }
+  .fa { color: #2e7d32; }
+</style>
+<style id="pagerrtl-preview-css"></style>
+</head>
+<body>
+  <h3>Preview</h3>
+  <p>این یک متن <span class="fa">فارسی</span> با کلمه‌ی <span class="en">English</span> در وسط آن است.</p>
+  <p>Another line with <span class="fa">متن راست‌به‌چپ</span> mixed in.</p>
+  <pre><code>function hello(name) {
+  return "Hello, " + name + "!";
+}</code></pre>
+  <p>پاراگراف پایانی برای تست.</p>
+</body>
+</html>`;
+
+function buildPreviewDoc(css) {
+  // We can't just replace the entire document; instead we build the srcdoc
+  // with the CSS embedded in the second <style> tag.
+  const escaped = String(css || "").replace(/<\/style/gi, "<\\/style");
+
+  return PREVIEW_HTML.replace(
+    '<style id="pagerrtl-preview-css"></style>',
+    `<style id="pagerrtl-preview-css">${escaped}</style>`,
+  );
+}
+
+let globalPreviewTimer = null;
+function updateGlobalPreview() {
+  clearTimeout(globalPreviewTimer);
+  globalPreviewTimer = setTimeout(() => {
+    globalPreviewEl.srcdoc = buildPreviewDoc(textarea.value);
+  }, 200);
+}
+
+let domainPreviewTimer = null;
+function updateDomainPreview() {
+  clearTimeout(domainPreviewTimer);
+  domainPreviewTimer = setTimeout(() => {
+    // Combine global CSS + current domain CSS in the editor
+    const globalCss = textarea.value || "";
+    const domainCss = editingDomain ? domainCssTextarea.value : "";
+    const combined = [globalCss, domainCss].filter((s) => s && s.trim() !== "").join("\n\n");
+    domainPreviewEl.srcdoc = buildPreviewDoc(combined);
+  }, 200);
+}
+
+// Debounced live updates
+textarea.addEventListener("input", updateGlobalPreview);
+domainCssTextarea.addEventListener("input", updateDomainPreview);
+
+// Toggle preview visibility
+toggleGlobalPreviewBtn.addEventListener("click", () => {
+  const collapsed = globalPreviewWrapEl.classList.toggle("collapsed");
+  toggleGlobalPreviewBtn.textContent = collapsed ? "Show" : "Hide";
+});
+
+toggleDomainPreviewBtn.addEventListener("click", () => {
+  const collapsed = domainPreviewWrapEl.classList.toggle("collapsed");
+  toggleDomainPreviewBtn.textContent = collapsed ? "Show" : "Hide";
+});
+
+// ============================================================
+// Restore default global CSS
+// ============================================================
+
+restoreGlobalCssBtn.addEventListener("click", () => {
+  textarea.value = DEFAULT_CSS;
+  updateGlobalPreview();
+  showStatus("Global CSS restored. Don't forget to Save all.");
+});
 
 // ============================================================
 // Presets UI
@@ -111,7 +228,6 @@ function renderPresets() {
 
     item.addEventListener("click", () => {
       if (domainCssMap[domain] !== undefined) {
-        // Already added → open in editor
         openEditorFor(domain);
       } else {
         addPreset(domain);
@@ -128,7 +244,6 @@ function renderPresets() {
 function addPreset(domain) {
   const preset = DOMAIN_PRESETS[domain];
   if (!preset) return;
-
   domainCssMap[domain] = preset.css;
   renderDomainList();
   renderPresets();
@@ -143,12 +258,10 @@ loadAllPresetsBtn.addEventListener("click", () => {
       added++;
     }
   }
-
   if (added === 0) {
     showStatus("All presets are already added.");
     return;
   }
-
   renderDomainList();
   renderPresets();
   showStatus(`Added ${added} preset(s). Don't forget to Save all.`);
@@ -167,9 +280,7 @@ function renderDomainList() {
     chip.className = "domain-chip";
     if (domain === editingDomain) chip.classList.add("active");
     chip.textContent = domain;
-
     chip.addEventListener("click", () => openEditorFor(domain));
-
     domainListEl.appendChild(chip);
   }
 }
@@ -180,8 +291,7 @@ function openEditorFor(domain) {
   domainCssTextarea.value = domainCssMap[domain] || "";
   domainEditorEl.hidden = false;
   renderDomainList();
-
-  // Scroll editor into view
+  updateDomainPreview();
   domainEditorEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
@@ -194,7 +304,7 @@ function closeEditor() {
 }
 
 // ============================================================
-// Add domain manually
+// Add / delete domain
 // ============================================================
 
 addDomainBtn.addEventListener("click", () => {
@@ -227,10 +337,6 @@ newDomainEl.addEventListener("keydown", (e) => {
     addDomainBtn.click();
   }
 });
-
-// ============================================================
-// Delete domain
-// ============================================================
 
 deleteDomainBtn.addEventListener("click", () => {
   if (!editingDomain) return;
@@ -269,6 +375,7 @@ resetBtn.addEventListener("click", () => {
   domainCssMap = {};
   closeEditor();
   renderPresets();
+  updateGlobalPreview();
 
   chrome.storage.sync.set(
     {
@@ -282,13 +389,114 @@ resetBtn.addEventListener("click", () => {
 });
 
 // ============================================================
-// Live capture edits
+// Live capture of domain textarea edits
 // ============================================================
 
 domainCssTextarea.addEventListener("input", () => {
   if (editingDomain) {
     domainCssMap[editingDomain] = domainCssTextarea.value;
   }
+});
+
+// ============================================================
+// Import / Export
+// ============================================================
+
+exportBtn.addEventListener("click", () => {
+  if (editingDomain) {
+    domainCssMap[editingDomain] = domainCssTextarea.value;
+  }
+
+  const payload = {
+    _meta: {
+      app: "PageRTL",
+      version: "1.3.0",
+      exportedAt: new Date().toISOString(),
+    },
+    customCss: textarea.value,
+    whitelist: whitelistEl.value,
+    priority: priorityEl.value,
+    domainCss: domainCssMap,
+  };
+
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  a.href = url;
+  a.download = `pagerrtl-settings-${ts}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showStatus("Exported ✓");
+});
+
+importBtn.addEventListener("click", () => {
+  importFileEl.value = "";
+  importFileEl.click();
+});
+
+importFileEl.addEventListener("change", (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try {
+      data = JSON.parse(reader.result);
+    } catch {
+      showStatus("Import failed: invalid JSON.", true);
+      return;
+    }
+
+    if (!data || typeof data !== "object") {
+      showStatus("Import failed: not a valid object.", true);
+      return;
+    }
+
+    const newCss = typeof data.customCss === "string" ? data.customCss : DEFAULT_CSS;
+    const newWhitelist = typeof data.whitelist === "string" ? data.whitelist : "";
+    const newPriority = ["manual-wins", "whitelist-wins", "manual-only"].includes(data.priority)
+      ? data.priority
+      : DEFAULT_PRIORITY;
+
+    let newDomainCss = {};
+    if (data.domainCss && typeof data.domainCss === "object") {
+      for (const [k, v] of Object.entries(data.domainCss)) {
+        if (typeof k === "string" && typeof v === "string") {
+          newDomainCss[k.toLowerCase().trim()] = v;
+        }
+      }
+    }
+
+    textarea.value = newCss;
+    whitelistEl.value = newWhitelist;
+    priorityEl.value = newPriority;
+    domainCssMap = newDomainCss;
+    closeEditor();
+    renderDomainList();
+    renderPresets();
+    updateGlobalPreview();
+
+    chrome.storage.sync.set(
+      {
+        customCss: newCss,
+        whitelist: newWhitelist,
+        priority: newPriority,
+        domainCss: newDomainCss,
+      },
+      () => showStatus("Imported ✓"),
+    );
+  };
+  reader.onerror = () => {
+    showStatus("Import failed: could not read file.", true);
+  };
+  reader.readAsText(file);
 });
 
 // ============================================================
@@ -315,117 +523,3 @@ function showStatus(msg, isError = false) {
 function escapeHtml(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
-
-// ============================================================
-// Import / Export
-// ============================================================
-
-const exportBtn = document.getElementById("exportBtn");
-const importBtn = document.getElementById("importBtn");
-const importFileEl = document.getElementById("importFile");
-
-/**
- * Export the current settings as a JSON file.
- */
-exportBtn.addEventListener("click", () => {
-  // Capture any pending edit in the domain editor before exporting
-  if (editingDomain) {
-    domainCssMap[editingDomain] = domainCssTextarea.value;
-  }
-
-  const payload = {
-    _meta: {
-      app: "PageRTL",
-      version: "1.2.0",
-      exportedAt: new Date().toISOString(),
-    },
-    customCss: textarea.value,
-    whitelist: whitelistEl.value,
-    priority: priorityEl.value,
-    domainCss: domainCssMap,
-  };
-
-  const json = JSON.stringify(payload, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  a.href = url;
-  a.download = `pagerrtl-settings-${ts}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  showStatus("Exported ✓");
-});
-
-/**
- * Import settings from a JSON file.
- */
-importBtn.addEventListener("click", () => {
-  importFileEl.value = ""; // reset so re-selecting the same file works
-  importFileEl.click();
-});
-
-importFileEl.addEventListener("change", (e) => {
-  const file = e.target.files && e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    let data;
-    try {
-      data = JSON.parse(reader.result);
-    } catch (err) {
-      showStatus("Import failed: invalid JSON.", true);
-      return;
-    }
-
-    if (!data || typeof data !== "object") {
-      showStatus("Import failed: not a valid object.", true);
-      return;
-    }
-
-    // Validate / sanitize fields
-    const newCss = typeof data.customCss === "string" ? data.customCss : DEFAULT_CSS;
-    const newWhitelist = typeof data.whitelist === "string" ? data.whitelist : "";
-    const newPriority = ["manual-wins", "whitelist-wins", "manual-only"].includes(data.priority)
-      ? data.priority
-      : DEFAULT_PRIORITY;
-
-    let newDomainCss = {};
-    if (data.domainCss && typeof data.domainCss === "object") {
-      for (const [k, v] of Object.entries(data.domainCss)) {
-        if (typeof k === "string" && typeof v === "string") {
-          newDomainCss[k.toLowerCase().trim()] = v;
-        }
-      }
-    }
-
-    // Apply to UI
-    textarea.value = newCss;
-    whitelistEl.value = newWhitelist;
-    priorityEl.value = newPriority;
-    domainCssMap = newDomainCss;
-    closeEditor();
-    renderDomainList();
-    renderPresets();
-
-    // Persist to storage
-    chrome.storage.sync.set(
-      {
-        customCss: newCss,
-        whitelist: newWhitelist,
-        priority: newPriority,
-        domainCss: newDomainCss,
-      },
-      () => showStatus("Imported ✓"),
-    );
-  };
-  reader.onerror = () => {
-    showStatus("Import failed: could not read file.", true);
-  };
-  reader.readAsText(file);
-});
