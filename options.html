@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PageRTL — Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>PageRTL Settings</h1>
+
+      <!-- ===================== Global CSS ===================== -->
+      <section>
+        <div class="label-row">
+          <label for="customCss"><strong>Global Custom CSS</strong></label>
+          <button id="restoreGlobalCssBtn" type="button" class="link-mini">Restore default</button>
+        </div>
+        <p class="hint">
+          Injected on every page (only when RTL is enabled). By default it contains
+          <code>html { direction: rtl; }</code> to make the page right-to-left, and
+          <code>pre { direction: ltr; }</code> to keep code blocks left-to-right. <br /><br />
+          If a website already sets <code>dir</code> on <code>&lt;html&gt;</code>
+          and you want to override it, use
+          <code>html { direction: rtl !important; }</code>.
+        </p>
+        <textarea id="customCss" rows="8" spellcheck="false"></textarea>
+
+        <!-- Live preview for global CSS -->
+        <div class="preview-wrap">
+          <div class="preview-header">
+            <span>Live preview (global CSS)</span>
+            <button id="toggleGlobalPreview" type="button" class="link-mini">Hide</button>
+          </div>
+          <iframe id="globalPreview" class="preview-frame" sandbox="" title="Global CSS preview"></iframe>
+        </div>
+      </section>
+
+      <!-- ===================== Presets ===================== -->
+      <section>
+        <label><strong>Recommended CSS presets</strong></label>
+        <p class="hint">
+          Quick presets for popular websites. Click a preset to add it to your domain-specific CSS. You can edit the
+          result afterwards.
+        </p>
+
+        <div class="preset-actions">
+          <button id="loadAllPresetsBtn" type="button" class="secondary">Add all recommended presets</button>
+          <span class="preset-count" id="presetCount"></span>
+        </div>
+
+        <div id="presetList" class="preset-list"></div>
+      </section>
+
+      <!-- ===================== Whitelist ===================== -->
+      <section>
+        <label for="whitelist"><strong>Whitelist (auto-enable domains)</strong></label>
+        <p class="hint">
+          When you visit one of these domains, RTL is applied automatically (depending on the priority below). One
+          domain per line. Lines starting with <code>#</code> are ignored.
+        </p>
+        <textarea
+          id="whitelist"
+          rows="5"
+          spellcheck="false"
+          placeholder="example.com&#10;fa.wikipedia.org&#10;# comment"
+        ></textarea>
+      </section>
+
+      <!-- ===================== Priority ===================== -->
+      <section>
+        <label for="priority"><strong>Priority: manual vs. whitelist</strong></label>
+        <p class="hint">Decides what happens when the whitelist and your manual on/off decision disagree.</p>
+        <select id="priority">
+          <option value="manual-wins">Manual decision wins (default)</option>
+          <option value="whitelist-wins">Whitelist wins (always auto-enable)</option>
+          <option value="manual-only">Manual only (ignore whitelist)</option>
+        </select>
+      </section>
+
+      <!-- ===================== Domain-specific CSS ===================== -->
+      <section>
+        <label><strong>Domain-specific CSS</strong></label>
+        <p class="hint">
+          Add custom CSS that only applies to a specific domain. It is <em>combined</em> with the global CSS above
+          (global first, then domain-specific, so the domain-specific rules can override).
+        </p>
+
+        <div id="domainList" class="domain-list"></div>
+
+        <div class="domain-add">
+          <input type="text" id="newDomain" placeholder="example.com" autocomplete="off" spellcheck="false" />
+          <button id="addDomainBtn" type="button" class="secondary">Add domain</button>
+        </div>
+
+        <div id="domainEditor" class="domain-editor" hidden>
+          <div class="domain-editor-header">
+            <span>CSS for <strong id="editingDomainName"></strong></span>
+            <button id="deleteDomainBtn" type="button" class="danger-mini">Delete</button>
+          </div>
+          <textarea
+            id="domainCssTextarea"
+            rows="6"
+            spellcheck="false"
+            placeholder="pre, code { direction: ltr; text-align: left; }"
+          ></textarea>
+
+          <!-- Live preview for domain-specific CSS -->
+          <div class="preview-wrap">
+            <div class="preview-header">
+              <span>Live preview (global + this domain)</span>
+              <button id="toggleDomainPreview" type="button" class="link-mini">Hide</button>
+            </div>
+            <iframe id="domainPreview" class="preview-frame" sandbox="" title="Domain CSS preview"></iframe>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== Import / Export ===================== -->
+      <section>
+        <label><strong>Backup &amp; Restore</strong></label>
+        <p class="hint">
+          Export your settings to a JSON file, or import them from a previously exported file. This includes global CSS,
+          whitelist, priority, and all domain-specific CSS.
+        </p>
+        <div class="io-actions">
+          <button id="exportBtn" type="button" class="secondary">Export settings…</button>
+          <button id="importBtn" type="button" class="secondary">Import settings…</button>
+          <input type="file" id="importFile" accept=".json,application/json" hidden />
+        </div>
+      </section>
+
+      <!-- ===================== Shortcuts ===================== -->
+      <section>
+        <label><strong>Keyboard shortcut</strong></label>
+        <p class="hint">Default: <code>Alt+Shift+R</code>. To change it, open your browser's shortcut settings:</p>
+        <button id="openShortcuts" class="secondary" type="button">Open shortcut settings</button>
+      </section>
+
+      <div class="actions">
+        <button id="saveBtn">Save all</button>
+        <button id="resetBtn" class="secondary">Reset to default</button>
+        <span id="status" class="status"></span>
+      </div>
+    </div>
+
+    <script src="options.js"></script>
+  </body>
+</html>
