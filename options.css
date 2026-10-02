@@ -107,3 +107,180 @@ button.secondary:hover {
 .status.show {
   opacity: 1;
 }
+/* Domain-specific CSS section */
+.domain-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  min-height: 0;
+}
+
+.domain-list:empty::before {
+  content: "No domains yet. Add one below.";
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+}
+
+.domain-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #eef4fb;
+  color: #1565c0;
+  border-radius: 14px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid #d5e6f7;
+  transition: background 0.15s;
+}
+
+.domain-chip:hover {
+  background: #dceafc;
+}
+
+.domain-chip.active {
+  background: #2196f3;
+  color: #fff;
+  border-color: #1976d2;
+}
+
+.domain-add {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.domain-add input {
+  flex: 1;
+  font-family: "Consolas", "Menlo", monospace;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid #ccd2d9;
+  border-radius: 6px;
+  background: #fafbfc;
+  direction: ltr;
+  text-align: left;
+}
+
+.domain-add input:focus {
+  outline: none;
+  border-color: #2196f3;
+  background: #fff;
+}
+
+.domain-editor {
+  margin-top: 10px;
+  padding: 12px;
+  background: #f7f8fa;
+  border-radius: 8px;
+  border: 1px solid #e5e8ec;
+}
+
+.domain-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #333;
+}
+
+.danger-mini {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid #e0b4b4;
+  background: #fff;
+  color: #c62828;
+  cursor: pointer;
+}
+
+.danger-mini:hover {
+  background: #fdecea;
+}
+
+/* Presets section */
+.preset-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.preset-count {
+  font-size: 12px;
+  color: #888;
+}
+
+.preset-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid #eef1f4;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+
+.preset-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  background: #fff;
+  border: 1px solid #e0e5ea;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.preset-item:hover {
+  border-color: #2196f3;
+  background: #f5faff;
+}
+
+.preset-item.added {
+  background: #eef8ee;
+  border-color: #b7dfb7;
+  cursor: default;
+  opacity: 0.75;
+}
+
+.preset-item.added:hover {
+  background: #eef8ee;
+  border-color: #b7dfb7;
+}
+
+.preset-item .preset-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preset-item .preset-label .check {
+  color: #2e7d32;
+  font-size: 12px;
+}
+
+.preset-item .preset-domain {
+  font-size: 11px;
+  color: #1976d2;
+  font-family: "Consolas", "Menlo", monospace;
+  direction: ltr;
+  text-align: left;
+}
+
+.preset-item .preset-desc {
+  font-size: 11px;
+  color: #777;
+  line-height: 1.3;
+}

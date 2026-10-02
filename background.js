@@ -58,14 +58,26 @@ async function decideStateForTab(tab) {
   }
 }
 async function applyToTab(tabId, state) {
-  const { customCss } = await getSettings();
+  let customCss = "";
+  if (state === "on") {
+    // We need the tab's URL to find the domain-specific CSS.
+    try {
+      const tab = await chrome.tabs.get(tabId);
+      customCss = await getEffectiveCss(tab.url || "");
+    } catch {
+      customCss = "";
+    }
+  }
+
   try {
     await chrome.scripting.executeScript({
       target: { tabId, allFrames: true },
       files: ["content.js"],
     });
+
     const func = state === "on" ? "enable" : "disable";
     const args = state === "on" ? [customCss] : [];
+
     await chrome.scripting.executeScript({
       target: { tabId, allFrames: true },
       func: (fnName, fnArgs) => {
@@ -75,6 +87,7 @@ async function applyToTab(tabId, state) {
       },
       args: [func, args],
     });
+
     updateBadge(tabId, state);
   } catch (err) {
     console.warn("PageRTL: could not apply to tab", tabId, err);
@@ -178,8 +191,10 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 chrome.storage.onChanged.addListener(async (changes, area) => {
   if (area !== "sync") return;
-  const relevant = changes.customCss || changes.whitelist || changes.priority;
+
+  const relevant = changes.customCss || changes.domainCss || changes.whitelist || changes.priority;
   if (!relevant) return;
+
   const tabs = await chrome.tabs.query({ url: ["http://*/*", "https://*/*"] });
   for (const tab of tabs) {
     if (!tab.id) continue;
@@ -187,3 +202,43 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
     await applyToTab(tab.id, effective);
   }
 });
+/**
+ * Returns the effective CSS for a given URL by combining
+ * the global customCss with any domain-specific CSS.
+ */
+async function getEffectiveCss(url) {
+  const settings = await chrome.storage.sync.get({
+    customCss: DEFAULT_CSS,
+    domainCss: {},
+  });
+
+  const globalCss = settings.customCss || "";
+  const domainCssMap = settings.domainCss || {};
+
+  let hostname = "";
+  try {
+    hostname = new URL(url).hostname.toLowerCase();
+  } catch {
+    return globalCss;
+  }
+
+  // Find the most specific matching domain
+  // e.g. for "gist.github.com", both "github.com" and "gist.github.com" match;
+  // we pick the longest (most specific) match.
+  let matchedDomain = null;
+  for (const domain of Object.keys(domainCssMap)) {
+    const d = domain.toLowerCase().trim();
+    if (!d) continue;
+    if (hostname === d || hostname.endsWith("." + d)) {
+      if (!matchedDomain || d.length > matchedDomain.length) {
+        matchedDomain = d;
+      }
+    }
+  }
+
+  const domainSpecific = matchedDomain ? domainCssMap[matchedDomain] : "";
+
+  // Combine: global first, then domain-specific (so it can override)
+  const parts = [globalCss, domainSpecific].filter((s) => s && s.trim() !== "");
+  return parts.join("\n\n");
+}

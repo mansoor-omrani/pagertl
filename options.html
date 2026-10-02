@@ -8,13 +8,31 @@
   <body>
     <div class="container">
       <h1>PageRTL Settings</h1>
+
       <section>
-        <label for="customCss"><strong>Custom CSS</strong></label>
+        <label for="customCss"><strong>Global Custom CSS</strong></label>
         <p class="hint">
-          Injected only when RTL is enabled on a page. Useful for keeping <code>&lt;pre&gt;</code> blocks LTR.
+          Injected only when RTL is enabled. Applied to every page. Useful for keeping <code>&lt;pre&gt;</code> blocks
+          LTR.
         </p>
-        <textarea id="customCss" rows="8" spellcheck="false"></textarea>
+        <textarea id="customCss" rows="6" spellcheck="false"></textarea>
       </section>
+
+      <section>
+        <label><strong>Recommended CSS presets</strong></label>
+        <p class="hint">
+          Quick presets for popular websites. Click a preset to add it to your domain-specific CSS. You can edit the
+          result afterwards.
+        </p>
+
+        <div class="preset-actions">
+          <button id="loadAllPresetsBtn" type="button" class="secondary">Add all recommended presets</button>
+          <span class="preset-count" id="presetCount"></span>
+        </div>
+
+        <div id="presetList" class="preset-list"></div>
+      </section>
+
       <section>
         <label for="whitelist"><strong>Whitelist (auto-enable domains)</strong></label>
         <p class="hint">
@@ -23,11 +41,12 @@
         </p>
         <textarea
           id="whitelist"
-          rows="6"
+          rows="5"
           spellcheck="false"
           placeholder="example.com&#10;fa.wikipedia.org&#10;# comment"
         ></textarea>
       </section>
+
       <section>
         <label for="priority"><strong>Priority: manual vs. whitelist</strong></label>
         <p class="hint">Decides what happens when the whitelist and your manual on/off decision disagree.</p>
@@ -37,17 +56,48 @@
           <option value="manual-only">Manual only (ignore whitelist)</option>
         </select>
       </section>
+
+      <section>
+        <label><strong>Domain-specific CSS</strong></label>
+        <p class="hint">
+          Add custom CSS that only applies to a specific domain. It is <em>combined</em> with the global CSS above
+          (global first, then domain-specific, so the domain-specific rules can override).
+        </p>
+
+        <div id="domainList" class="domain-list"></div>
+
+        <div class="domain-add">
+          <input type="text" id="newDomain" placeholder="example.com" autocomplete="off" spellcheck="false" />
+          <button id="addDomainBtn" type="button" class="secondary">Add domain</button>
+        </div>
+
+        <div id="domainEditor" class="domain-editor" hidden>
+          <div class="domain-editor-header">
+            <span>CSS for <strong id="editingDomainName"></strong></span>
+            <button id="deleteDomainBtn" type="button" class="danger-mini">Delete</button>
+          </div>
+          <textarea
+            id="domainCssTextarea"
+            rows="6"
+            spellcheck="false"
+            placeholder="pre, code { direction: ltr; text-align: left; }"
+          ></textarea>
+        </div>
+      </section>
+
       <section>
         <label><strong>Keyboard shortcut</strong></label>
         <p class="hint">Default: <code>Alt+Shift+R</code>. To change it, open your browser's shortcut settings:</p>
         <button id="openShortcuts" class="secondary" type="button">Open shortcut settings</button>
       </section>
+
       <div class="actions">
-        <button id="saveBtn">Save</button>
+        <button id="saveBtn">Save all</button>
         <button id="resetBtn" class="secondary">Reset to default</button>
         <span id="status" class="status"></span>
       </div>
     </div>
+
     <script src="options.js"></script>
   </body>
 </html>
